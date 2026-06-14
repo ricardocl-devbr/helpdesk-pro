@@ -19,6 +19,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { PRIORIDADE_LABELS } from '@/lib/constants'
 import type { Categoria, PrioridadeTicket } from '@/types'
 
@@ -38,6 +48,7 @@ export function NovoTicketModal({ open, onClose, onSuccess }: NovoTicketModalPro
   const [categorias, setCategorias] = useState<Categoria[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [confirmOpen, setConfirmOpen] = useState(false)
 
   useEffect(() => {
     if (!open) return
@@ -59,11 +70,27 @@ export function NovoTicketModal({ open, onClose, onSuccess }: NovoTicketModalPro
     setError(null)
   }
 
-  function handleOpenChange(isOpen: boolean) {
-    if (!isOpen) {
-      resetForm()
-      onClose()
+  function hasUnsavedData() {
+    return titulo.trim() !== '' || descricao.trim() !== '' || categoriaId !== ''
+  }
+
+  function handleClose() {
+    if (hasUnsavedData()) {
+      setConfirmOpen(true)
+      return
     }
+    resetForm()
+    onClose()
+  }
+
+  function handleConfirmDiscard() {
+    setConfirmOpen(false)
+    resetForm()
+    onClose()
+  }
+
+  function handleOpenChange(isOpen: boolean) {
+    if (!isOpen) handleClose()
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -108,8 +135,29 @@ export function NovoTicketModal({ open, onClose, onSuccess }: NovoTicketModalPro
   }
 
   return (
+    <>
+    <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Descartar alterações?</AlertDialogTitle>
+          <AlertDialogDescription>
+            As informações digitadas serão perdidas.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Continuar editando</AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            onClick={handleConfirmDiscard}
+          >
+            Descartar
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg" onInteractOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>Novo Ticket</DialogTitle>
         </DialogHeader>
@@ -178,7 +226,7 @@ export function NovoTicketModal({ open, onClose, onSuccess }: NovoTicketModalPro
           {error && <p className="text-sm text-destructive">{error}</p>}
 
           <div className="flex items-center justify-end gap-3 pt-2">
-            <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
+            <Button type="button" variant="outline" onClick={handleClose} disabled={loading}>
               Cancelar
             </Button>
             <Button type="submit" disabled={loading}>
@@ -188,5 +236,6 @@ export function NovoTicketModal({ open, onClose, onSuccess }: NovoTicketModalPro
         </form>
       </DialogContent>
     </Dialog>
+    </>
   )
 }

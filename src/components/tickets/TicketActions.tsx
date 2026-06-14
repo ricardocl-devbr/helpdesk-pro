@@ -30,10 +30,10 @@ export function TicketActions({
   const router = useRouter()
   const [loading, setLoading] = useState(false)
 
-  if (currentUserRole !== 'admin' && currentUserRole !== 'agente') return null
+  if (currentUserRole !== 'admin' && currentUserRole !== 'agent') return null
 
   async function handleChange(
-    field: 'status' | 'prioridade' | 'agente_id',
+    field: 'status' | 'priority' | 'agent_id',
     tipoEvento: 'status_changed' | 'prioridade_changed' | 'agente_assigned',
     oldValue: string | null,
     newValue: string | null
@@ -54,16 +54,16 @@ export function TicketActions({
       return
     }
 
-    const { error: eventError } = await supabase.from('ticket_eventos').insert({
+    const { error: eventError } = await supabase.from('ticket_events').insert({
       ticket_id: ticket.id,
-      autor_id: currentUserId,
-      tipo_evento: tipoEvento,
-      valor_antigo: oldValue,
-      valor_novo: newValue,
+      author_id: currentUserId,
+      event_type: tipoEvento,
+      old_value: oldValue,
+      new_value: newValue,
     })
 
     if (eventError) {
-      console.error('ticket_eventos insert failed:', eventError.message, eventError.code)
+      console.error('ticket_events insert failed:', eventError.message, eventError.code)
     }
 
     appToast.success('Ticket updated.')
@@ -102,9 +102,9 @@ export function TicketActions({
         <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Priority</span>
         <Select
           disabled={loading}
-          defaultValue={ticket.prioridade}
+          defaultValue={ticket.priority}
           onValueChange={(v) =>
-            handleChange('prioridade', 'prioridade_changed', ticket.prioridade, v)
+            handleChange('priority', 'prioridade_changed', ticket.priority, v)
           }
         >
           <SelectTrigger className="w-full h-8 text-sm">
@@ -126,9 +126,9 @@ export function TicketActions({
         </span>
         <Select
           disabled={loading}
-          defaultValue={ticket.agente_id ?? '__unassigned__'}
+          defaultValue={ticket.agent_id ?? '__unassigned__'}
           onValueChange={(v) =>
-            handleChange('agente_id', 'agente_assigned', ticket.agente_id, v === '__unassigned__' ? null : v)
+            handleChange('agent_id', 'agente_assigned', ticket.agent_id, v === '__unassigned__' ? null : v)
           }
         >
           <SelectTrigger className="w-full h-8 text-sm">

@@ -62,7 +62,7 @@ export function CategoriasClient({ categories }: CategoriasClientProps) {
     setTogglingId(category.id)
     const supabase = createBrowserClient()
     const { error } = await supabase
-      .from('categorias')
+      .from('categories')
       .update({ ativa: !category.ativa })
       .eq('id', category.id)
     setTogglingId(null)
@@ -80,7 +80,7 @@ export function CategoriasClient({ categories }: CategoriasClientProps) {
     const { count } = await supabase
       .from('tickets')
       .select('*', { count: 'exact', head: true })
-      .eq('categoria_id', category.id)
+      .eq('category_id', category.id)
     setCheckingId(null)
     if (count && count > 0) {
       appToast.error('Category has linked tickets. Deactivate it instead.')
@@ -93,7 +93,7 @@ export function CategoriasClient({ categories }: CategoriasClientProps) {
     if (!deleteTarget) return
     setDeleting(true)
     const supabase = createBrowserClient()
-    const { error } = await supabase.from('categorias').delete().eq('id', deleteTarget.id)
+    const { error } = await supabase.from('categories').delete().eq('id', deleteTarget.id)
     setDeleting(false)
     setDeleteTarget(null)
     if (error) {
@@ -135,17 +135,17 @@ export function CategoriasClient({ categories }: CategoriasClientProps) {
                   <TableCell>
                     <span
                       className="inline-block h-5 w-5 rounded-full border border-border"
-                      style={{ backgroundColor: category.cor }}
+                      style={{ backgroundColor: category.color }}
                     />
                   </TableCell>
                   <TableCell className={`font-medium${!category.ativa ? ' text-muted-foreground' : ''}`}>
-                    {category.nome}
+                    {category.name}
                     {!category.ativa && (
                       <Badge variant="secondary" className="ml-2 text-xs">inactive</Badge>
                     )}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {category.descricao ?? '—'}
+                    {category.description ?? '—'}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
@@ -204,7 +204,7 @@ export function CategoriasClient({ categories }: CategoriasClientProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete category?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete &quot;{deleteTarget?.nome}&quot;. This action cannot be
+              This will permanently delete &quot;{deleteTarget?.name}&quot;. This action cannot be
               undone.
             </AlertDialogDescription>
           </AlertDialogHeader>

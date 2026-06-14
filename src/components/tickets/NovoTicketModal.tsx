@@ -32,7 +32,7 @@ import {
 import { PRIORIDADE_LABELS } from '@/lib/constants'
 import type { Categoria, PrioridadeTicket } from '@/types'
 
-const PRIORIDADES: PrioridadeTicket[] = ['baixa', 'media', 'alta', 'urgente']
+const PRIORIDADES: PrioridadeTicket[] = ['low', 'medium', 'high', 'urgent']
 
 interface NovoTicketModalProps {
   open: boolean
@@ -44,7 +44,7 @@ export function NovoTicketModal({ open, onClose, onSuccess }: NovoTicketModalPro
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [categoryId, setCategoryId] = useState('')
-  const [prioridade, setPrioridade] = useState<PrioridadeTicket>('media')
+  const [prioridade, setPrioridade] = useState<PrioridadeTicket>('medium')
   const [categories, setCategories] = useState<Categoria[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -54,10 +54,10 @@ export function NovoTicketModal({ open, onClose, onSuccess }: NovoTicketModalPro
     if (!open) return
     const supabase = createBrowserClient()
     supabase
-      .from('categorias')
+      .from('categories')
       .select('*')
       .eq('ativa', true)
-      .order('nome')
+      .order('name')
       .then(({ data }) => {
         if (data) setCategories(data)
       })
@@ -67,7 +67,7 @@ export function NovoTicketModal({ open, onClose, onSuccess }: NovoTicketModalPro
     setTitle('')
     setDescription('')
     setCategoryId('')
-    setPrioridade('media')
+    setPrioridade('medium')
     setError(null)
   }
 
@@ -116,12 +116,12 @@ export function NovoTicketModal({ open, onClose, onSuccess }: NovoTicketModalPro
     }
 
     const { error: insertError } = await supabase.from('tickets').insert({
-      titulo: title.trim(),
-      descricao: description.trim(),
-      categoria_id: categoryId || null,
-      prioridade,
-      cliente_id: user.id,
-      status: 'aberto',
+      title: title.trim(),
+      description: description.trim(),
+      category_id: categoryId || null,
+      priority: prioridade,
+      customer_id: user.id,
+      status: 'open',
     })
 
     setLoading(false)
@@ -197,7 +197,7 @@ export function NovoTicketModal({ open, onClose, onSuccess }: NovoTicketModalPro
                 <SelectContent>
                   {categories.map((cat) => (
                     <SelectItem key={cat.id} value={cat.id}>
-                      {cat.nome}
+                      {cat.name}
                     </SelectItem>
                   ))}
                 </SelectContent>

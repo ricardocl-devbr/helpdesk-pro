@@ -23,9 +23,9 @@ export default async function CategoriasPage() {
   if (profile.role !== 'admin') redirect('/dashboard')
 
   const { data: categories } = await supabase
-    .from('categorias')
+    .from('categories')
     .select('*')
-    .order('nome', { ascending: true })
+    .order('name', { ascending: true })
 
   return (
     <div>

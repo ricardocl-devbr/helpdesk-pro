@@ -60,7 +60,7 @@ export default async function TicketDetailPage({
   const { data: ticket } = await supabase
     .from('tickets')
     .select(
-      '*, categoria:categorias(id, nome, cor), cliente:profiles!tickets_cliente_id_fkey(id, full_name, email), agente:profiles!tickets_agente_id_fkey(id, full_name, email)'
+      '*, categoria:categories(id, name, color), cliente:profiles!tickets_customer_id_fkey(id, full_name, email), agente:profiles!tickets_agent_id_fkey(id, full_name, email)'
     )
     .eq('numero', Number(numero))
     .single()
@@ -68,19 +68,19 @@ export default async function TicketDetailPage({
   if (!ticket) redirect('/tickets')
 
   const { data: messages } = await supabase
-    .from('mensagens')
+    .from('messages')
     .select('*, autor:profiles(id, full_name, avatar_url, role)')
     .eq('ticket_id', ticket.id)
-    .eq('interno', false)
+    .eq('internal', false)
     .order('created_at', { ascending: true })
 
   const { data: agents } = await supabase
     .from('profiles')
     .select('id, full_name, email, role, avatar_url, created_at, updated_at')
-    .in('role', ['admin', 'agente'])
+    .in('role', ['admin', 'agent'])
 
   const { data: events } = await supabase
-    .from('ticket_eventos')
+    .from('ticket_events')
     .select('*, autor:profiles(id, full_name)')
     .eq('ticket_id', ticket.id)
     .order('created_at', { ascending: true })
@@ -93,7 +93,7 @@ export default async function TicketDetailPage({
   return (
     <div>
       <Header
-        title={`Ticket #${t.numero} — ${t.titulo}`}
+        title={`Ticket #${t.numero} — ${t.title}`}
         profile={profile as Profile}
       />
 
@@ -122,7 +122,7 @@ export default async function TicketDetailPage({
                     </span>
                   </div>
                   <div className="bg-gray-50 rounded-lg px-3 py-2 text-sm text-gray-700 whitespace-pre-wrap">
-                    {t.descricao}
+                    {t.description}
                   </div>
                 </div>
               </div>
@@ -131,7 +131,7 @@ export default async function TicketDetailPage({
 
               {/* Messages */}
               {msgs.map((msg) => {
-                const isCustomer = msg.autor.role === 'cliente'
+                const isCustomer = msg.autor.role === 'customer'
                 return (
                   <div
                     key={msg.id}
@@ -174,7 +174,7 @@ export default async function TicketDetailPage({
                             : 'bg-indigo-50 text-indigo-900'
                         }`}
                       >
-                        {msg.conteudo}
+                        {msg.content}
                       </div>
                     </div>
                   </div>
@@ -201,7 +201,7 @@ export default async function TicketDetailPage({
               <CardTitle className="text-base font-medium">Details</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 text-sm">
-              {profile.role === 'admin' || profile.role === 'agente' ? (
+              {profile.role === 'admin' || profile.role === 'agent' ? (
                 <TicketActions
                   ticket={t}
                   currentUserRole={profile.role}
@@ -226,8 +226,8 @@ export default async function TicketDetailPage({
                       Priority
                     </span>
                     <div>
-                      <Badge className={PRIORIDADE_COLORS[t.prioridade]}>
-                        {PRIORIDADE_LABELS[t.prioridade]}
+                      <Badge className={PRIORIDADE_COLORS[t.priority]}>
+                        {PRIORIDADE_LABELS[t.priority]}
                       </Badge>
                     </div>
                   </div>
@@ -242,9 +242,9 @@ export default async function TicketDetailPage({
                   <div className="flex items-center gap-2">
                     <span
                       className="inline-block h-2.5 w-2.5 rounded-full shrink-0"
-                      style={{ backgroundColor: t.categoria.cor }}
+                      style={{ backgroundColor: t.categoria.color }}
                     />
-                    <span className="text-gray-700">{t.categoria.nome}</span>
+                    <span className="text-gray-700">{t.categoria.name}</span>
                   </div>
                 </div>
               )}

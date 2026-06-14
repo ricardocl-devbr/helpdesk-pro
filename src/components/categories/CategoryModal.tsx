@@ -33,9 +33,9 @@ export function CategoryModal({ open, mode, category, onClose, onSuccess }: Cate
   useEffect(() => {
     if (!open) return
     if (mode === 'edit' && category) {
-      setName(category.nome)
-      setColor(category.cor)
-      setDescription(category.descricao ?? '')
+      setName(category.name)
+      setColor(category.color)
+      setDescription(category.description ?? '')
     } else {
       setName('')
       setColor('#6366f1')
@@ -61,15 +61,15 @@ export function CategoryModal({ open, mode, category, onClose, onSuccess }: Cate
     const supabase = createBrowserClient()
 
     const payload = {
-      nome: name.trim(),
-      cor: color,
-      descricao: description.trim() || null,
+      name: name.trim(),
+      color,
+      description: description.trim() || null,
     }
 
     const { error: dbError } =
       mode === 'create'
-        ? await supabase.from('categorias').insert(payload)
-        : await supabase.from('categorias').update(payload).eq('id', category!.id)
+        ? await supabase.from('categories').insert(payload)
+        : await supabase.from('categories').update(payload).eq('id', category!.id)
 
     setLoading(false)
 

@@ -25,7 +25,7 @@ export default async function AgentesPage() {
   const { data: agents } = await supabase
     .from('profiles')
     .select('*')
-    .in('role', ['admin', 'agente'])
+    .in('role', ['admin', 'agent'])
     .order('created_at', { ascending: true })
 
   return (

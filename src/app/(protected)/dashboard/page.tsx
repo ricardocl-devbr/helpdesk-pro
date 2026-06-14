@@ -23,20 +23,20 @@ export default async function DashboardPage() {
 
   if (!profile) redirect('/login')
 
-  const isCustomer = profile.role === 'cliente'
+  const isCustomer = profile.role === 'customer'
 
   const baseCount = () => {
     const q = supabase.from('tickets').select('*', { count: 'exact', head: true })
-    return isCustomer ? q.eq('cliente_id', user.id) : q
+    return isCustomer ? q.eq('customer_id', user.id) : q
   }
 
   const recentQuery = () => {
     const q = supabase
       .from('tickets')
-      .select('id, titulo, status, created_at')
+      .select('id, title, status, created_at')
       .order('created_at', { ascending: false })
       .limit(5)
-    return isCustomer ? q.eq('cliente_id', user.id) : q
+    return isCustomer ? q.eq('customer_id', user.id) : q
   }
 
   const [
@@ -47,9 +47,9 @@ export default async function DashboardPage() {
     { data: recent },
   ] = await Promise.all([
     baseCount(),
-    baseCount().eq('status', 'aberto'),
-    baseCount().eq('status', 'em_andamento'),
-    baseCount().eq('status', 'resolvido'),
+    baseCount().eq('status', 'open'),
+    baseCount().eq('status', 'in_progress'),
+    baseCount().eq('status', 'resolved'),
     recentQuery(),
   ])
 
@@ -94,7 +94,7 @@ export default async function DashboardPage() {
                     className="flex items-center justify-between px-4 py-3"
                   >
                     <span className="text-sm font-medium text-foreground truncate mr-4">
-                      {ticket.titulo}
+                      {ticket.title}
                     </span>
                     <div className="flex items-center gap-3 shrink-0">
                       <Badge className={STATUS_COLORS[ticket.status as StatusTicket]}>

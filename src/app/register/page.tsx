@@ -34,7 +34,7 @@ export default function RegistroPage() {
       options: {
         data: {
           full_name: fullName,
-          role: 'cliente',
+          role: 'customer',
         },
       },
     })

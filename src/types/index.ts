@@ -1,15 +1,15 @@
 // ─── Union Types ─────────────────────────────────────────────────────────────
 
-export type RolePerfil = 'admin' | 'agente' | 'cliente'
+export type RolePerfil = 'admin' | 'agent' | 'customer'
 
 export type StatusTicket =
-  | 'aberto'
-  | 'em_andamento'
-  | 'aguardando_cliente'
-  | 'resolvido'
-  | 'fechado'
+  | 'open'
+  | 'in_progress'
+  | 'waiting_for_customer'
+  | 'resolved'
+  | 'closed'
 
-export type PrioridadeTicket = 'baixa' | 'media' | 'alta' | 'urgente'
+export type PrioridadeTicket = 'low' | 'medium' | 'high' | 'urgent'
 
 // ─── Base Entities ────────────────────────────────────────────────────────────
 
@@ -25,9 +25,9 @@ export interface Profile {
 
 export interface Categoria {
   id: string
-  nome: string
-  cor: string
-  descricao: string | null
+  name: string
+  color: string
+  description: string | null
   ativa: boolean
   created_at: string
 }
@@ -35,13 +35,13 @@ export interface Categoria {
 export interface Ticket {
   id: string
   numero: number
-  titulo: string
-  descricao: string
+  title: string
+  description: string
   status: StatusTicket
-  prioridade: PrioridadeTicket
-  categoria_id: string
-  cliente_id: string
-  agente_id: string | null
+  priority: PrioridadeTicket
+  category_id: string
+  customer_id: string
+  agent_id: string | null
   created_at: string
   updated_at: string
   resolved_at: string | null
@@ -50,9 +50,9 @@ export interface Ticket {
 export interface Mensagem {
   id: string
   ticket_id: string
-  autor_id: string
-  conteudo: string
-  interno: boolean
+  author_id: string
+  content: string
+  internal: boolean
   created_at: string
 }
 
@@ -73,10 +73,10 @@ export type TipoEvento = 'status_changed' | 'prioridade_changed' | 'agente_assig
 export interface TicketEvento {
   id: string
   ticket_id: string
-  autor_id: string
-  tipo_evento: TipoEvento
-  valor_antigo: string | null
-  valor_novo: string | null
+  author_id: string
+  event_type: TipoEvento
+  old_value: string | null
+  new_value: string | null
   created_at: string
 }
 

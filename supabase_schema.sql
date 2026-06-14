@@ -8,8 +8,8 @@ CREATE TABLE public.profiles (
   email TEXT NOT NULL,
   full_name TEXT,
   avatar_url TEXT,
-  role TEXT NOT NULL DEFAULT 'cliente'
-    CHECK (role IN ('admin', 'agente', 'cliente')),
+  role TEXT NOT NULL DEFAULT 'customer'
+    CHECK (role IN ('admin', 'agent', 'customer')),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -29,17 +29,17 @@ $$;
 -- RLS: each user sees their own profile; admins see all
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Usuários veem próprio perfil"
+CREATE POLICY "Users see own profile"
   ON public.profiles FOR SELECT
   USING (auth.uid() = id);
 
-DROP POLICY IF EXISTS "Admins e agentes veem todos os perfis" ON public.profiles;
+DROP POLICY IF EXISTS "Admins and agents see all profiles" ON public.profiles;
 
-CREATE POLICY "Admins e agentes veem todos os perfis"
+CREATE POLICY "Admins and agents see all profiles"
   ON public.profiles FOR SELECT
-  USING (public.get_current_user_role() IN ('admin', 'agente'));
+  USING (public.get_current_user_role() IN ('admin', 'agent'));
 
-CREATE POLICY "Usuários atualizam próprio perfil"
+CREATE POLICY "Users update own profile"
   ON public.profiles FOR UPDATE
   USING (auth.uid() = id);
 
@@ -52,7 +52,7 @@ BEGIN
     new.id,
     new.email,
     COALESCE(new.raw_user_meta_data->>'full_name', ''),
-    COALESCE(new.raw_user_meta_data->>'role', 'cliente')
+    COALESCE(new.raw_user_meta_data->>'role', 'customer')
   );
   RETURN new;
 END;
@@ -66,29 +66,30 @@ CREATE TRIGGER on_auth_user_created
 -- TICKET CATEGORIES
 -- ================================================================
 
-CREATE TABLE public.categorias (
+CREATE TABLE public.categories (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  nome TEXT NOT NULL UNIQUE,
-  cor TEXT DEFAULT '#6366f1',  -- badge color (hex)
-  descricao TEXT,
+  name TEXT NOT NULL UNIQUE,
+  color TEXT DEFAULT '#6366f1',  -- badge color (hex)
+  description TEXT,
+  ativa BOOLEAN DEFAULT true,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Categories: any authenticated user can read; only admins can create/edit
-ALTER TABLE public.categorias ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Autenticados leem categorias"
-  ON public.categorias FOR SELECT
+CREATE POLICY "Authenticated users read categories"
+  ON public.categories FOR SELECT
   USING (auth.uid() IS NOT NULL);
 
-CREATE POLICY "Admins gerenciam categorias"
-  ON public.categorias FOR ALL
+CREATE POLICY "Admins manage categories"
+  ON public.categories FOR ALL
   USING (
     EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
   );
 
 -- Initial categories
-INSERT INTO public.categorias (nome, cor, descricao) VALUES
+INSERT INTO public.categories (name, color, description) VALUES
   ('Technical Support', '#ef4444', 'Technical issues with the system'),
   ('Financial', '#f59e0b', 'Questions about billing and payments'),
   ('Commercial', '#10b981', 'New products and services'),
@@ -101,15 +102,15 @@ INSERT INTO public.categorias (nome, cor, descricao) VALUES
 CREATE TABLE public.tickets (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   numero SERIAL UNIQUE,             -- human-readable number: #1, #2, #3...
-  titulo TEXT NOT NULL,
-  descricao TEXT NOT NULL,
-  status TEXT NOT NULL DEFAULT 'aberto'
-    CHECK (status IN ('aberto', 'em_andamento', 'aguardando_cliente', 'resolvido', 'fechado')),
-  prioridade TEXT NOT NULL DEFAULT 'media'
-    CHECK (prioridade IN ('baixa', 'media', 'alta', 'urgente')),
-  categoria_id UUID REFERENCES public.categorias(id),
-  cliente_id UUID NOT NULL REFERENCES public.profiles(id),  -- who opened the ticket
-  agente_id UUID REFERENCES public.profiles(id),            -- who is handling it
+  title TEXT NOT NULL,
+  description TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'open'
+    CHECK (status IN ('open', 'in_progress', 'waiting_for_customer', 'resolved', 'closed')),
+  priority TEXT NOT NULL DEFAULT 'medium'
+    CHECK (priority IN ('low', 'medium', 'high', 'urgent')),
+  category_id UUID REFERENCES public.categories(id),
+  customer_id UUID NOT NULL REFERENCES public.profiles(id),  -- who opened the ticket
+  agent_id UUID REFERENCES public.profiles(id),              -- who is handling it
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
   resolved_at TIMESTAMPTZ
@@ -119,28 +120,28 @@ CREATE TABLE public.tickets (
 ALTER TABLE public.tickets ENABLE ROW LEVEL SECURITY;
 
 -- Customers see ONLY their own tickets
-CREATE POLICY "Clientes veem somente seus tickets"
+CREATE POLICY "Customers see only their tickets"
   ON public.tickets FOR SELECT
   USING (
-    auth.uid() = cliente_id OR
+    auth.uid() = customer_id OR
     EXISTS (
       SELECT 1 FROM public.profiles
-      WHERE id = auth.uid() AND role IN ('admin', 'agente')
+      WHERE id = auth.uid() AND role IN ('admin', 'agent')
     )
   );
 
--- Customers create tickets (they themselves are the cliente_id)
-CREATE POLICY "Clientes criam tickets"
+-- Customers create tickets (they themselves are the customer_id)
+CREATE POLICY "Customers create tickets"
   ON public.tickets FOR INSERT
-  WITH CHECK (auth.uid() = cliente_id);
+  WITH CHECK (auth.uid() = customer_id);
 
 -- Admins and agents update tickets
-CREATE POLICY "Admins e agentes atualizam tickets"
+CREATE POLICY "Admins and agents update tickets"
   ON public.tickets FOR UPDATE
   USING (
     EXISTS (
       SELECT 1 FROM public.profiles
-      WHERE id = auth.uid() AND role IN ('admin', 'agente')
+      WHERE id = auth.uid() AND role IN ('admin', 'agent')
     )
   );
 
@@ -148,54 +149,89 @@ CREATE POLICY "Admins e agentes atualizam tickets"
 -- MESSAGES (CONVERSATION WITHIN EACH TICKET)
 -- ================================================================
 
-CREATE TABLE public.mensagens (
+CREATE TABLE public.messages (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   ticket_id UUID NOT NULL REFERENCES public.tickets(id) ON DELETE CASCADE,
-  autor_id UUID NOT NULL REFERENCES public.profiles(id),
-  conteudo TEXT NOT NULL,
-  interno BOOLEAN DEFAULT false,  -- true = internal note (agents only)
+  author_id UUID NOT NULL REFERENCES public.profiles(id),
+  content TEXT NOT NULL,
+  internal BOOLEAN DEFAULT false,  -- true = internal note (agents only)
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-ALTER TABLE public.mensagens ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
 
 -- Ticket participants can see messages (customers cannot see internal notes)
-CREATE POLICY "Veem mensagens do ticket"
-  ON public.mensagens FOR SELECT
+CREATE POLICY "Ticket participants see messages"
+  ON public.messages FOR SELECT
   USING (
     EXISTS (
       SELECT 1 FROM public.tickets t
       WHERE t.id = ticket_id AND (
-        auth.uid() = t.cliente_id OR
+        auth.uid() = t.customer_id OR
         EXISTS (
           SELECT 1 FROM public.profiles
-          WHERE id = auth.uid() AND role IN ('admin', 'agente')
+          WHERE id = auth.uid() AND role IN ('admin', 'agent')
         )
       )
     ) AND (
       -- Customers cannot see internal notes
-      interno = false OR
+      internal = false OR
       EXISTS (
         SELECT 1 FROM public.profiles
-        WHERE id = auth.uid() AND role IN ('admin', 'agente')
+        WHERE id = auth.uid() AND role IN ('admin', 'agent')
       )
     )
   );
 
 -- Who can write messages on a ticket
-CREATE POLICY "Participantes escrevem mensagens"
-  ON public.mensagens FOR INSERT
+CREATE POLICY "Ticket participants write messages"
+  ON public.messages FOR INSERT
   WITH CHECK (
-    auth.uid() = autor_id AND
+    auth.uid() = author_id AND
     EXISTS (
       SELECT 1 FROM public.tickets t
       WHERE t.id = ticket_id AND (
-        auth.uid() = t.cliente_id OR
+        auth.uid() = t.customer_id OR
         EXISTS (
           SELECT 1 FROM public.profiles
-          WHERE id = auth.uid() AND role IN ('admin', 'agente')
+          WHERE id = auth.uid() AND role IN ('admin', 'agent')
         )
       )
+    )
+  );
+
+-- ================================================================
+-- TICKET EVENTS (AUDIT LOG)
+-- ================================================================
+
+CREATE TABLE public.ticket_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  ticket_id UUID NOT NULL REFERENCES public.tickets(id) ON DELETE CASCADE,
+  author_id UUID NOT NULL REFERENCES public.profiles(id),
+  event_type TEXT NOT NULL,
+  old_value TEXT,
+  new_value TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.ticket_events ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Admins and agents see ticket events"
+  ON public.ticket_events FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE id = auth.uid() AND role IN ('admin', 'agent')
+    )
+  );
+
+CREATE POLICY "Admins and agents insert ticket events"
+  ON public.ticket_events FOR INSERT
+  WITH CHECK (
+    auth.uid() = author_id AND
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE id = auth.uid() AND role IN ('admin', 'agent')
     )
   );
 

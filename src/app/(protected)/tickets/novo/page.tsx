@@ -17,13 +17,13 @@ import {
 import { PRIORIDADE_LABELS } from '@/lib/constants'
 import type { Categoria, PrioridadeTicket } from '@/types'
 
-const PRIORIDADES: PrioridadeTicket[] = ['baixa', 'media', 'alta', 'urgente']
+const PRIORIDADES: PrioridadeTicket[] = ['low', 'medium', 'high', 'urgent']
 
 export default function NovoTicketPage() {
   const [titulo, setTitulo] = useState('')
   const [descricao, setDescricao] = useState('')
   const [categoriaId, setCategoriaId] = useState('')
-  const [prioridade, setPrioridade] = useState<PrioridadeTicket>('media')
+  const [prioridade, setPrioridade] = useState<PrioridadeTicket>('medium')
   const [categorias, setCategorias] = useState<Categoria[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -31,10 +31,10 @@ export default function NovoTicketPage() {
   useEffect(() => {
     const supabase = createBrowserClient()
     supabase
-      .from('categorias')
+      .from('categories')
       .select('*')
       .eq('ativa', true)
-      .order('nome')
+      .order('name')
       .then(({ data }) => {
         if (data) setCategorias(data)
       })
@@ -62,12 +62,12 @@ export default function NovoTicketPage() {
     }
 
     const { error: insertError } = await supabase.from('tickets').insert({
-      titulo: titulo.trim(),
-      descricao: descricao.trim(),
-      categoria_id: categoriaId || null,
-      prioridade,
-      cliente_id: user.id,
-      status: 'aberto',
+      title: titulo.trim(),
+      description: descricao.trim(),
+      category_id: categoriaId || null,
+      priority: prioridade,
+      customer_id: user.id,
+      status: 'open',
     })
 
     if (insertError) {
@@ -128,7 +128,7 @@ export default function NovoTicketPage() {
                     <SelectContent>
                       {categorias.map((cat) => (
                         <SelectItem key={cat.id} value={cat.id}>
-                          {cat.nome}
+                          {cat.name}
                         </SelectItem>
                       ))}
                     </SelectContent>

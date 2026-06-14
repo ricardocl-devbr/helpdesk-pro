@@ -33,11 +33,11 @@ export function FormularioResposta({ ticketId }: FormularioRespostaProps) {
       return
     }
 
-    const { error: insertError } = await supabase.from('mensagens').insert({
+    const { error: insertError } = await supabase.from('messages').insert({
       ticket_id: ticketId,
-      autor_id: user.id,
-      conteudo: content.trim(),
-      interno: false,
+      author_id: user.id,
+      content: content.trim(),
+      internal: false,
     })
 
     if (insertError) {

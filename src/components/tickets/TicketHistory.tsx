@@ -43,11 +43,11 @@ export function TicketHistory({ events, agentList }: TicketHistoryProps) {
   return (
     <ol className="space-y-3">
       {events.map((event, i) => {
-        const meta = EVENT_META[event.tipo_evento]
+        const meta = EVENT_META[event.event_type]
         if (!meta) return null
         const Icon = meta.icon
-        const oldLabel = resolveLabel(event.tipo_evento, event.valor_antigo, agentList)
-        const newLabel = resolveLabel(event.tipo_evento, event.valor_novo, agentList)
+        const oldLabel = resolveLabel(event.event_type, event.old_value, agentList)
+        const newLabel = resolveLabel(event.event_type, event.new_value, agentList)
 
         return (
           <li key={event.id} className="flex gap-3 text-sm">

@@ -67,6 +67,22 @@ export interface MensagemComAutor extends Mensagem {
   autor: Profile
 }
 
+export type TipoEvento = 'status_changed' | 'prioridade_changed' | 'agente_assigned'
+
+export interface TicketEvento {
+  id: string
+  ticket_id: string
+  autor_id: string
+  tipo_evento: TipoEvento
+  valor_antigo: string | null
+  valor_novo: string | null
+  created_at: string
+}
+
+export interface TicketEventoComAutor extends TicketEvento {
+  autor: Pick<Profile, 'id' | 'full_name'>
+}
+
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 
 export interface DashboardStats {

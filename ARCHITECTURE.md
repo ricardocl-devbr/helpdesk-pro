@@ -286,8 +286,9 @@ Every request → proxy.ts calls supabase.auth.getUser()
 
 | Name | Email | Role |
 |---|---|---|
-| Ricardo | r_camargos@hotmail.com | `cliente` (customer) |
-| Robert | ricardocl.ufu@gmail.com | `admin` |
+| Ricardo Agente | r_camargos@hotmail.com | `agente` |
+| Ricardo Admin | ricardocl.ufu@gmail.com | `admin` |
+| Ricardo Cliente | ricardocl.note@gmail.com | `cliente` |
 
 ---
 

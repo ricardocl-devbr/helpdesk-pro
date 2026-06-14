@@ -2,6 +2,8 @@ import { redirect } from 'next/navigation'
 import { createServerClient } from '@/lib/supabase/server'
 import { Header } from '@/components/layout/Header'
 import { FormularioResposta } from '@/components/tickets/FormularioResposta'
+import { TicketActions } from '@/components/tickets/TicketActions'
+import { TicketHistory } from '@/components/tickets/TicketHistory'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -12,7 +14,7 @@ import {
   PRIORIDADE_LABELS,
   PRIORIDADE_COLORS,
 } from '@/lib/constants'
-import type { Profile, TicketComDetalhes, MensagemComAutor } from '@/types'
+import type { Profile, TicketComDetalhes, MensagemComAutor, TicketEventoComAutor } from '@/types'
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleString('en-US', {
@@ -72,8 +74,21 @@ export default async function TicketDetailPage({
     .eq('interno', false)
     .order('created_at', { ascending: true })
 
+  const { data: agents } = await supabase
+    .from('profiles')
+    .select('id, full_name, email, role, avatar_url, created_at, updated_at')
+    .in('role', ['admin', 'agente'])
+
+  const { data: events } = await supabase
+    .from('ticket_eventos')
+    .select('*, autor:profiles(id, full_name)')
+    .eq('ticket_id', ticket.id)
+    .order('created_at', { ascending: true })
+
   const t = ticket as TicketComDetalhes
   const msgs = (messages ?? []) as MensagemComAutor[]
+  const agentList = (agents ?? []) as Profile[]
+  const ticketEvents = (events ?? []) as TicketEventoComAutor[]
 
   return (
     <div>
@@ -84,7 +99,7 @@ export default async function TicketDetailPage({
 
       <div className="p-6 flex gap-6 items-start">
         {/* Left column: conversation + form */}
-        <div className="flex-[2] min-w-0 space-y-4">
+        <div className="flex-2 min-w-0 space-y-4">
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base font-medium">Conversation</CardTitle>
@@ -180,33 +195,44 @@ export default async function TicketDetailPage({
         </div>
 
         {/* Right column: ticket details */}
-        <div className="flex-[1] min-w-0">
+        <div className="flex-1 min-w-0 space-y-4">
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base font-medium">Details</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 text-sm">
-              <div className="space-y-1">
-                <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                  Status
-                </span>
-                <div>
-                  <Badge className={STATUS_COLORS[t.status]}>
-                    {STATUS_LABELS[t.status]}
-                  </Badge>
-                </div>
-              </div>
+              {profile.role === 'admin' || profile.role === 'agente' ? (
+                <TicketActions
+                  ticket={t}
+                  currentUserRole={profile.role}
+                  currentUserId={profile.id}
+                  agentList={agentList}
+                />
+              ) : (
+                <>
+                  <div className="space-y-1">
+                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                      Status
+                    </span>
+                    <div>
+                      <Badge className={STATUS_COLORS[t.status]}>
+                        {STATUS_LABELS[t.status]}
+                      </Badge>
+                    </div>
+                  </div>
 
-              <div className="space-y-1">
-                <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                  Priority
-                </span>
-                <div>
-                  <Badge className={PRIORIDADE_COLORS[t.prioridade]}>
-                    {PRIORIDADE_LABELS[t.prioridade]}
-                  </Badge>
-                </div>
-              </div>
+                  <div className="space-y-1">
+                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                      Priority
+                    </span>
+                    <div>
+                      <Badge className={PRIORIDADE_COLORS[t.prioridade]}>
+                        {PRIORIDADE_LABELS[t.prioridade]}
+                      </Badge>
+                    </div>
+                  </div>
+                </>
+              )}
 
               {t.categoria && (
                 <div className="space-y-1">
@@ -279,6 +305,15 @@ export default async function TicketDetailPage({
                   </div>
                 )}
               </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-medium">History</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <TicketHistory events={ticketEvents} agentList={agentList} />
             </CardContent>
           </Card>
         </div>

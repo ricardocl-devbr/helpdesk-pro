@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createBrowserClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -10,7 +9,6 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 export default function RegistroPage() {
-  const router = useRouter()
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -47,7 +45,7 @@ export default function RegistroPage() {
       return
     }
 
-    router.push('/dashboard')
+    window.location.href = '/dashboard'
   }
 
   return (

@@ -11,7 +11,7 @@ function isPublicRoute(pathname: string): boolean {
   )
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -35,7 +35,6 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // Atualiza a sessão — não use getSession() aqui, getUser() valida no servidor
   const {
     data: { user },
   } = await supabase.auth.getUser()

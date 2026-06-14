@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createServerClient } from '@/lib/supabase/server'
 import { Header } from '@/components/layout/Header'
-import { PerfilForm } from '@/components/perfil/PerfilForm'
+import { PerfilForm } from '@/components/profile/PerfilForm'
 import type { Profile } from '@/types'
 
 export default async function PerfilPage() {

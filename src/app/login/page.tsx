@@ -70,14 +70,14 @@ export default function LoginPage() {
           </form>
           <div className="mt-4 flex flex-col items-center gap-2 text-sm text-zinc-600">
             <Link
-              href="/esqueci-senha"
+              href="/forgot-password"
               className="text-zinc-500 hover:text-zinc-900 underline underline-offset-4"
             >
               Forgot my password
             </Link>
             <span>
               Don&apos;t have an account?{' '}
-              <Link href="/registro" className="font-medium text-zinc-900 underline underline-offset-4">
+              <Link href="/register" className="font-medium text-zinc-900 underline underline-offset-4">
                 Sign Up
               </Link>
             </span>

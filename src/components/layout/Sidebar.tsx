@@ -72,7 +72,7 @@ export function Sidebar({ profile }: SidebarProps) {
 
       <div className="border-t border-gray-200 px-3 py-4">
         <Link
-          href="/perfil"
+          href="/profile"
           className="flex items-center gap-3 mb-3 rounded-md px-1 py-1 hover:bg-gray-100 transition-colors"
         >
           <Avatar className="h-8 w-8 shrink-0">

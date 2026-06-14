@@ -14,6 +14,18 @@ CREATE TABLE public.profiles (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Função auxiliar: lê o role do usuário atual sem acionar RLS (evita recursão infinita
+-- nas policies que precisam consultar profiles para verificar permissões)
+CREATE OR REPLACE FUNCTION public.get_current_user_role()
+RETURNS TEXT
+LANGUAGE sql
+SECURITY DEFINER
+STABLE
+SET search_path = public
+AS $$
+  SELECT role FROM public.profiles WHERE id = auth.uid()
+$$;
+
 -- RLS: cada usuário vê seu perfil; admins veem todos
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
@@ -23,13 +35,7 @@ CREATE POLICY "Usuários veem próprio perfil"
 
 CREATE POLICY "Admins e agentes veem todos os perfis"
   ON public.profiles FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles p
-      WHERE p.id = auth.uid()
-      AND p.role IN ('admin', 'agente')
-    )
-  );
+  USING (public.get_current_user_role() IN ('admin', 'agente'));
 
 CREATE POLICY "Usuários atualizam próprio perfil"
   ON public.profiles FOR UPDATE

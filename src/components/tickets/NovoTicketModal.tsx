@@ -56,6 +56,7 @@ export function NovoTicketModal({ open, onClose, onSuccess }: NovoTicketModalPro
     supabase
       .from('categorias')
       .select('*')
+      .eq('ativa', true)
       .order('nome')
       .then(({ data }) => {
         if (data) setCategories(data)

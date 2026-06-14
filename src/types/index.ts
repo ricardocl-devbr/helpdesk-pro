@@ -28,6 +28,7 @@ export interface Categoria {
   nome: string
   cor: string
   descricao: string | null
+  ativa: boolean
   created_at: string
 }
 

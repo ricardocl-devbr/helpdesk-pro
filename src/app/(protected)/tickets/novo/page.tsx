@@ -33,6 +33,7 @@ export default function NovoTicketPage() {
     supabase
       .from('categorias')
       .select('*')
+      .eq('ativa', true)
       .order('nome')
       .then(({ data }) => {
         if (data) setCategorias(data)

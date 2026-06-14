@@ -2,7 +2,7 @@
 
 **Live URL:** https://helpdesk-pro-tau.vercel.app  
 **GitHub:** https://github.com/ricardocl-devbr/helpdesk-pro  
-**Status:** Module 1 complete — Module 2 in progress
+**Status:** Module 1 complete — Module 2 in progress (Steps 2.1, 2.3, 2.4 done)
 
 ---
 
@@ -32,6 +32,12 @@ src/
 │   │   ├── layout.tsx                     ← Auth guard + Sidebar wrapper (Server Component)
 │   │   ├── dashboard/
 │   │   │   └── page.tsx                   ← Metrics dashboard (Server Component)
+│   │   ├── agentes/
+│   │   │   ├── page.tsx                   ← Agents list page (Server Component, admin-only)
+│   │   │   └── AgentesClient.tsx          ← Table of profiles with role admin/agente (Client Component)
+│   │   ├── categorias/
+│   │   │   ├── page.tsx                   ← Categories management page (Server Component, admin-only)
+│   │   │   └── CategoriasClient.tsx       ← CRUD table; opens CategoryModal (Client Component)
 │   │   ├── profile/
 │   │   │   └── page.tsx                   ← User profile page (Server Component)
 │   │   └── tickets/
@@ -59,11 +65,13 @@ src/
 │   │   └── Header.tsx                     ← Page title + role badge + user avatar
 │   ├── profile/
 │   │   └── PerfilForm.tsx                 ← Edit full_name; role is displayed as read-only
+│   ├── categories/
+│   │   └── CategoryModal.tsx              ← Create/edit category Dialog; name, color picker, description (Client Component)
 │   ├── tickets/
 │   │   ├── FormularioResposta.tsx         ← Reply form; uses window.location.reload() after INSERT
 │   │   ├── NovoTicketModal.tsx            ← Create ticket Dialog with AlertDialog unsaved-changes guard
-│   │   ├── TicketActions.tsx              ← Status + agent selects (admin/agente only) [uncommitted]
-│   │   └── TicketHistory.tsx             ← ticket_eventos timeline UI [uncommitted]
+│   │   ├── TicketActions.tsx              ← Status + priority + agent selects (admin/agente only); logs to ticket_eventos
+│   │   └── TicketHistory.tsx             ← Vertical timeline of ticket_eventos with icons and timeAgo
 │   └── ui/                               ← shadcn/ui components (do not edit directly)
 │       ├── alert-dialog.tsx
 │       ├── alert.tsx
@@ -83,6 +91,7 @@ src/
 │       └── textarea.tsx
 ├── lib/
 │   ├── constants.ts                       ← STATUS_LABELS/COLORS, PRIORIDADE_LABELS/COLORS, ROLE_LABELS
+│   ├── toast.ts                           ← appToast wrapper around sonner for consistent notifications
 │   ├── utils.ts                           ← cn() helper (clsx + tailwind-merge)
 │   ├── utils/
 │   │   └── ticket.ts                      ← getStatusBadgeProps, getPrioridadeBadgeProps, formatDate, timeAgo
@@ -119,6 +128,7 @@ id           UUID PK
 nome         TEXT UNIQUE
 cor          TEXT  (hex color, e.g. '#ef4444')
 descricao    TEXT (nullable)
+ativa        BOOLEAN NOT NULL DEFAULT true
 created_at   TIMESTAMPTZ DEFAULT NOW()
 ```
 Pre-seeded: Suporte Técnico (#ef4444), Financeiro (#f59e0b), Comercial (#10b981), Outros (#6366f1)
@@ -159,7 +169,7 @@ valor_antigo TEXT (nullable)  ← previous value
 valor_novo   TEXT (nullable)  ← new value
 created_at   TIMESTAMPTZ DEFAULT NOW()
 ```
-> Table and UI exist. DB trigger for auto-logging not yet created — this is a Module 2 task (Step 2.3).
+> Columns confirmed. `TicketActions` inserts rows directly from the client on each change (Step 2.3 complete). A DB trigger for server-side auto-logging is not required.
 
 ### RLS Policies Summary
 
@@ -215,6 +225,12 @@ RLS policies on `tickets` and `mensagens` check the current user's role by query
 ### 4.9 Internal Notes: DB Ready, UI Not Implemented
 `mensagens.interno` and the RLS policy that hides internal messages from `cliente` are already in place. `FormularioResposta` currently hardcodes `interno: false`. The toggle UI is a Module 2 task (Step 2.8).
 
+### 4.10 Category Soft-Delete via `ativa` Flag
+Categories have an `ativa BOOLEAN NOT NULL DEFAULT true` column. Inactive categories are hidden from ticket creation forms but are preserved in existing tickets so historical data is not broken. Hard delete is only allowed when no tickets reference the category — `CategoriasClient` checks for linked tickets before issuing a `DELETE`.
+
+### 4.11 `appToast` Wrapper Around Sonner
+`src/lib/toast.ts` exports `appToast` (with `.success`, `.error`, `.info` methods) as a thin wrapper around the `sonner` toast library. All components use `appToast` instead of calling `sonner` directly, keeping notification style consistent and making the underlying library easy to swap.
+
 ---
 
 ## 5. Authentication Flow
@@ -251,6 +267,8 @@ Every request → proxy.ts calls supabase.auth.getUser()
 | `/tickets/[numero]` | `app/(protected)/tickets/[numero]/page.tsx` | Server | Conversation, reply form, event history, actions card |
 | `/tickets/novo` | `app/(protected)/tickets/novo/page.tsx` | Client | Standalone create-ticket form |
 | `/profile` | `app/(protected)/profile/page.tsx` | Server | Edit full_name; role shown as read-only |
+| `/agentes` | `app/(protected)/agentes/page.tsx` | Server | Admin-only; lists all profiles with role `admin` or `agente` |
+| `/categorias` | `app/(protected)/categorias/page.tsx` | Server | Admin-only; create, edit, deactivate and delete categories |
 
 ### Components
 
@@ -261,24 +279,27 @@ Every request → proxy.ts calls supabase.auth.getUser()
 | `TicketsClient` | `app/(protected)/tickets/TicketsClient.tsx` | Client | Ticket table with colored status/priority badges; "New Ticket" button opens `NovoTicketModal` |
 | `NovoTicketModal` | `components/tickets/NovoTicketModal.tsx` | Client | Dialog for creating tickets; fetches categories on open; AlertDialog unsaved-changes guard |
 | `FormularioResposta` | `components/tickets/FormularioResposta.tsx` | Client | Reply textarea + Send button; hardcodes `interno: false`; calls `window.location.reload()` on success |
-| `TicketActions` | `components/tickets/TicketActions.tsx` | Client | Status select + Assign Agent select; visible to admin/agente only; calls `router.refresh()` on change — **uncommitted** |
-| `TicketHistory` | `components/tickets/TicketHistory.tsx` | Client | Vertical timeline of `ticket_eventos`; maps event types to human-readable text — **uncommitted** |
+| `TicketActions` | `components/tickets/TicketActions.tsx` | Client | Status + priority + agent selects; visible to admin/agente only; logs each change to `ticket_eventos`; calls `router.refresh()` |
+| `TicketHistory` | `components/tickets/TicketHistory.tsx` | Client | Vertical timeline of `ticket_eventos`; maps event types to icons and human-readable text using `timeAgo` |
+| `AgentesClient` | `app/(protected)/agentes/AgentesClient.tsx` | Client | Table listing agents/admins; fetched from `profiles` filtered by role |
+| `CategoriasClient` | `app/(protected)/categorias/CategoriasClient.tsx` | Client | Category CRUD table; deactivate toggle; opens `CategoryModal`; guards hard delete when tickets are linked |
+| `CategoryModal` | `components/categories/CategoryModal.tsx` | Client | Dialog for create/edit category; fields: name, color picker, description |
 | `PerfilForm` | `components/profile/PerfilForm.tsx` | Client | Edit full_name; displays role as read-only badge |
 
 ---
 
-## 7. Module 2 — What Still Needs to Be Built
+## 7. Module 2 — Progress
 
-| Feature | Step | Current State |
+| Feature | Step | Status |
 |---|---|---|
-| `/agents` page | 2.4 | Sidebar links to `/agentes` → 404 |
-| `/categories` page | 2.4 | Sidebar links to `/categorias` → 404 |
-| Priority change via UI | 2.1 | `TicketActions` has status + agent but not priority select |
-| DB trigger to auto-log ticket events | 2.3 | `ticket_eventos` table + UI exist; trigger missing |
-| Realtime messages | 2.6 | `FormularioResposta` uses `window.location.reload()` — page reload required |
-| Filters and search on ticket list | 2.5 | No filters; all tickets shown unsorted |
-| Internal notes toggle | 2.8 | DB field + RLS policy ready; `FormularioResposta` hardcodes `interno: false` |
-| Email notifications | 2.7 | Not started; planned via Supabase Edge Functions + Resend |
+| `TicketActions`: status + priority + agent | 2.1 | ✅ Done |
+| `TicketHistory` timeline | 2.3 | ✅ Done |
+| `/agentes` page | 2.4 | ✅ Done |
+| `/categorias` page | 2.4 | ✅ Done |
+| Filters and search on ticket list | 2.5 | Pending — no filters; all tickets shown unsorted |
+| Realtime messages | 2.6 | Pending — `FormularioResposta` uses `window.location.reload()` |
+| Email notifications | 2.7 | Pending — planned via Supabase Edge Functions + Resend |
+| Internal notes toggle | 2.8 | Pending — DB field + RLS ready; `FormularioResposta` hardcodes `interno: false` |
 
 ---
 
@@ -301,4 +322,4 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_[...]
 
 ---
 
-*Last updated: June 2026 — Module 1 complete, Module 2 in progress*
+*Last updated: June 2026 — Module 2 Steps 2.1, 2.3, 2.4 complete; 2.5, 2.6, 2.7, 2.8 pending*

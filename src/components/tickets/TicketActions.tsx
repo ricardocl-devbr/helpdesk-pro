@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { toast } from 'sonner'
+import { appToast } from '@/lib/toast'
 import { createBrowserClient } from '@/lib/supabase/client'
 import {
   Select,
@@ -49,7 +49,7 @@ export function TicketActions({
       .eq('id', ticket.id)
 
     if (updateError) {
-      toast.error('Failed to update ticket.')
+      appToast.error('Failed to update ticket.')
       setLoading(false)
       return
     }
@@ -66,7 +66,7 @@ export function TicketActions({
       console.error('ticket_eventos insert failed:', eventError.message, eventError.code)
     }
 
-    toast.success('Ticket updated.')
+    appToast.success('Ticket updated.')
     setLoading(false)
     router.refresh()
   }

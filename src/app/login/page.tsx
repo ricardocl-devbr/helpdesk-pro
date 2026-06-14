@@ -35,23 +35,23 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-zinc-50">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle className="text-2xl">Entrar</CardTitle>
+          <CardTitle className="text-2xl">Sign In</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="seu@email.com"
+                placeholder="your@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
+              <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
                 type="password"
@@ -65,15 +65,23 @@ export default function LoginPage() {
               <p className="text-sm text-red-500">{error}</p>
             )}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Entrando...' : 'Entrar'}
+              {loading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
-          <p className="mt-4 text-center text-sm text-zinc-600">
-            Não tem conta?{' '}
-            <Link href="/registro" className="font-medium text-zinc-900 underline underline-offset-4">
-              Cadastre-se
+          <div className="mt-4 flex flex-col items-center gap-2 text-sm text-zinc-600">
+            <Link
+              href="/esqueci-senha"
+              className="text-zinc-500 hover:text-zinc-900 underline underline-offset-4"
+            >
+              Forgot my password
             </Link>
-          </p>
+            <span>
+              Don&apos;t have an account?{' '}
+              <Link href="/registro" className="font-medium text-zinc-900 underline underline-offset-4">
+                Sign Up
+              </Link>
+            </span>
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -1,11 +1,11 @@
 import type { StatusTicket, PrioridadeTicket, RolePerfil } from '@/types'
 
 export const STATUS_LABELS: Record<StatusTicket, string> = {
-  aberto: 'Aberto',
-  em_andamento: 'Em Andamento',
-  aguardando_cliente: 'Aguardando Cliente',
-  resolvido: 'Resolvido',
-  fechado: 'Fechado',
+  aberto: 'Open',
+  em_andamento: 'In Progress',
+  aguardando_cliente: 'Waiting for Customer',
+  resolvido: 'Resolved',
+  fechado: 'Closed',
 }
 
 export const STATUS_COLORS: Record<StatusTicket, string> = {
@@ -17,10 +17,10 @@ export const STATUS_COLORS: Record<StatusTicket, string> = {
 }
 
 export const PRIORIDADE_LABELS: Record<PrioridadeTicket, string> = {
-  baixa: 'Baixa',
-  media: 'Média',
-  alta: 'Alta',
-  urgente: 'Urgente',
+  baixa: 'Low',
+  media: 'Medium',
+  alta: 'High',
+  urgente: 'Urgent',
 }
 
 export const PRIORIDADE_COLORS: Record<PrioridadeTicket, string> = {
@@ -31,7 +31,7 @@ export const PRIORIDADE_COLORS: Record<PrioridadeTicket, string> = {
 }
 
 export const ROLE_LABELS: Record<RolePerfil, string> = {
-  admin: 'Administrador',
-  agente: 'Agente',
-  cliente: 'Cliente',
+  admin: 'Admin',
+  agente: 'Agent',
+  cliente: 'Customer',
 }

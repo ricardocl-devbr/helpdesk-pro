@@ -23,41 +23,41 @@ export default async function DashboardPage() {
 
   if (!profile) redirect('/login')
 
-  const isCliente = profile.role === 'cliente'
+  const isCustomer = profile.role === 'cliente'
 
   const baseCount = () => {
     const q = supabase.from('tickets').select('*', { count: 'exact', head: true })
-    return isCliente ? q.eq('cliente_id', user.id) : q
+    return isCustomer ? q.eq('cliente_id', user.id) : q
   }
 
-  const recentesQuery = () => {
+  const recentQuery = () => {
     const q = supabase
       .from('tickets')
       .select('id, titulo, status, created_at')
       .order('created_at', { ascending: false })
       .limit(5)
-    return isCliente ? q.eq('cliente_id', user.id) : q
+    return isCustomer ? q.eq('cliente_id', user.id) : q
   }
 
   const [
     { count: total },
-    { count: abertos },
-    { count: em_andamento },
-    { count: resolvidos },
-    { data: recentes },
+    { count: open },
+    { count: inProgress },
+    { count: resolved },
+    { data: recent },
   ] = await Promise.all([
     baseCount(),
     baseCount().eq('status', 'aberto'),
     baseCount().eq('status', 'em_andamento'),
     baseCount().eq('status', 'resolvido'),
-    recentesQuery(),
+    recentQuery(),
   ])
 
   const metrics = [
-    { label: 'Total de Tickets', value: total ?? 0 },
-    { label: 'Abertos', value: abertos ?? 0 },
-    { label: 'Em Andamento', value: em_andamento ?? 0 },
-    { label: 'Resolvidos', value: resolvidos ?? 0 },
+    { label: 'Total Tickets', value: total ?? 0 },
+    { label: 'Open', value: open ?? 0 },
+    { label: 'In Progress', value: inProgress ?? 0 },
+    { label: 'Resolved', value: resolved ?? 0 },
   ]
 
   return (
@@ -81,14 +81,14 @@ export default async function DashboardPage() {
         </div>
 
         <div>
-          <h2 className="text-lg font-semibold text-foreground mb-4">Tickets Recentes</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">Recent Tickets</h2>
 
-          {!recentes || recentes.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nenhum ticket encontrado.</p>
+          {!recent || recent.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No tickets found.</p>
           ) : (
             <Card>
               <ul className="divide-y divide-border">
-                {recentes.map((ticket) => (
+                {recent.map((ticket) => (
                   <li
                     key={ticket.id}
                     className="flex items-center justify-between px-4 py-3"
@@ -101,7 +101,7 @@ export default async function DashboardPage() {
                         {STATUS_LABELS[ticket.status as StatusTicket]}
                       </Badge>
                       <span className="text-xs text-muted-foreground">
-                        {new Date(ticket.created_at).toLocaleDateString('pt-BR')}
+                        {new Date(ticket.created_at).toLocaleDateString('en-US')}
                       </span>
                     </div>
                   </li>

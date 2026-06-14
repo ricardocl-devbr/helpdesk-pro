@@ -18,8 +18,8 @@ const navLinks = [
 ]
 
 const adminLinks = [
-  { href: '/agentes', label: 'Agentes', icon: Users },
-  { href: '/categorias', label: 'Categorias', icon: Tag },
+  { href: '/agentes', label: 'Agents', icon: Users },
+  { href: '/categorias', label: 'Categories', icon: Tag },
 ]
 
 export function Sidebar({ profile }: SidebarProps) {
@@ -92,7 +92,7 @@ export function Sidebar({ profile }: SidebarProps) {
           className="w-full justify-start text-gray-500 hover:text-gray-900 hover:bg-gray-100"
         >
           <LogOut className="h-4 w-4 mr-2" />
-          Sair
+          Sign Out
         </Button>
       </div>
     </aside>

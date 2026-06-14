@@ -10,16 +10,16 @@ interface FormularioRespostaProps {
 }
 
 export function FormularioResposta({ ticketId }: FormularioRespostaProps) {
-  const [conteudo, setConteudo] = useState('')
-  const [enviando, setEnviando] = useState(false)
-  const [erro, setErro] = useState<string | null>(null)
+  const [content, setContent] = useState('')
+  const [sending, setSending] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!conteudo.trim()) return
+    if (!content.trim()) return
 
-    setEnviando(true)
-    setErro(null)
+    setSending(true)
+    setError(null)
 
     const supabase = createBrowserClient()
 
@@ -28,21 +28,21 @@ export function FormularioResposta({ ticketId }: FormularioRespostaProps) {
     } = await supabase.auth.getUser()
 
     if (!user) {
-      setErro('Usuário não autenticado.')
-      setEnviando(false)
+      setError('User not authenticated.')
+      setSending(false)
       return
     }
 
-    const { error } = await supabase.from('mensagens').insert({
+    const { error: insertError } = await supabase.from('mensagens').insert({
       ticket_id: ticketId,
       autor_id: user.id,
-      conteudo: conteudo.trim(),
+      conteudo: content.trim(),
       interno: false,
     })
 
-    if (error) {
-      setErro('Erro ao enviar resposta. Tente novamente.')
-      setEnviando(false)
+    if (insertError) {
+      setError('Error sending reply. Please try again.')
+      setSending(false)
       return
     }
 
@@ -52,17 +52,17 @@ export function FormularioResposta({ ticketId }: FormularioRespostaProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <Textarea
-        placeholder="Digite sua resposta..."
-        value={conteudo}
-        onChange={(e) => setConteudo(e.target.value)}
+        placeholder="Type your reply..."
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
         rows={4}
-        disabled={enviando}
+        disabled={sending}
         className="resize-none"
       />
-      {erro && <p className="text-sm text-red-600">{erro}</p>}
+      {error && <p className="text-sm text-red-600">{error}</p>}
       <div className="flex justify-end">
-        <Button type="submit" disabled={enviando || !conteudo.trim()}>
-          {enviando ? 'Enviando...' : 'Enviar Resposta'}
+        <Button type="submit" disabled={sending || !content.trim()}>
+          {sending ? 'Sending...' : 'Send Reply'}
         </Button>
       </div>
     </form>

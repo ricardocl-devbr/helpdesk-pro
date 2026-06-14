@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -14,6 +15,7 @@ interface PerfilFormProps {
 }
 
 export function PerfilForm({ profile }: PerfilFormProps) {
+  const router = useRouter()
   const [fullName, setFullName] = useState(profile.full_name)
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -32,9 +34,10 @@ export function PerfilForm({ profile }: PerfilFormProps) {
       .eq('id', profile.id)
 
     if (updateError) {
-      setError('Erro ao atualizar perfil. Tente novamente.')
+      setError('Error updating profile. Please try again.')
     } else {
       setSuccess(true)
+      router.refresh()
     }
 
     setLoading(false)
@@ -43,12 +46,12 @@ export function PerfilForm({ profile }: PerfilFormProps) {
   return (
     <Card className="max-w-lg">
       <CardHeader>
-        <CardTitle className="text-base font-semibold">Informações do Perfil</CardTitle>
+        <CardTitle className="text-base font-semibold">Profile Information</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="full_name">Nome completo</Label>
+            <Label htmlFor="full_name">Full name</Label>
             <Input
               id="full_name"
               value={fullName}
@@ -61,24 +64,24 @@ export function PerfilForm({ profile }: PerfilFormProps) {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="email">E-mail</Label>
+            <Label htmlFor="email">Email</Label>
             <Input id="email" value={profile.email} disabled />
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="role">Perfil</Label>
+            <Label htmlFor="role">Role</Label>
             <Input id="role" value={ROLE_LABELS[profile.role]} disabled />
           </div>
 
           {success && (
-            <p className="text-sm text-green-600 font-medium">Perfil atualizado!</p>
+            <p className="text-sm text-green-600 font-medium">Profile updated!</p>
           )}
           {error && (
             <p className="text-sm text-red-600">{error}</p>
           )}
 
           <Button type="submit" disabled={loading}>
-            {loading ? 'Salvando...' : 'Salvar alterações'}
+            {loading ? 'Saving...' : 'Save changes'}
           </Button>
         </form>
       </CardContent>

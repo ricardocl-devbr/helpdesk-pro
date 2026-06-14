@@ -23,7 +23,7 @@ export default async function PerfilPage() {
 
   return (
     <div>
-      <Header title="Meu Perfil" profile={profile as Profile} />
+      <Header title="My Profile" profile={profile as Profile} />
       <div className="p-6">
         <PerfilForm profile={profile as Profile} />
       </div>

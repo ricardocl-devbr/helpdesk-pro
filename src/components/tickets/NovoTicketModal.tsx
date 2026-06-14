@@ -41,11 +41,11 @@ interface NovoTicketModalProps {
 }
 
 export function NovoTicketModal({ open, onClose, onSuccess }: NovoTicketModalProps) {
-  const [titulo, setTitulo] = useState('')
-  const [descricao, setDescricao] = useState('')
-  const [categoriaId, setCategoriaId] = useState('')
+  const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
+  const [categoryId, setCategoryId] = useState('')
   const [prioridade, setPrioridade] = useState<PrioridadeTicket>('media')
-  const [categorias, setCategorias] = useState<Categoria[]>([])
+  const [categories, setCategories] = useState<Categoria[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [confirmOpen, setConfirmOpen] = useState(false)
@@ -58,20 +58,20 @@ export function NovoTicketModal({ open, onClose, onSuccess }: NovoTicketModalPro
       .select('*')
       .order('nome')
       .then(({ data }) => {
-        if (data) setCategorias(data)
+        if (data) setCategories(data)
       })
   }, [open])
 
   function resetForm() {
-    setTitulo('')
-    setDescricao('')
-    setCategoriaId('')
+    setTitle('')
+    setDescription('')
+    setCategoryId('')
     setPrioridade('media')
     setError(null)
   }
 
   function hasUnsavedData() {
-    return titulo.trim() !== '' || descricao.trim() !== '' || categoriaId !== ''
+    return title.trim() !== '' || description.trim() !== '' || categoryId !== ''
   }
 
   function handleClose() {
@@ -97,8 +97,8 @@ export function NovoTicketModal({ open, onClose, onSuccess }: NovoTicketModalPro
     e.preventDefault()
     setError(null)
 
-    if (!titulo.trim() || !descricao.trim()) {
-      setError('Título e descrição são obrigatórios.')
+    if (!title.trim() || !description.trim()) {
+      setError('Title and description are required.')
       return
     }
 
@@ -115,9 +115,9 @@ export function NovoTicketModal({ open, onClose, onSuccess }: NovoTicketModalPro
     }
 
     const { error: insertError } = await supabase.from('tickets').insert({
-      titulo: titulo.trim(),
-      descricao: descricao.trim(),
-      categoria_id: categoriaId || null,
+      titulo: title.trim(),
+      descricao: description.trim(),
+      categoria_id: categoryId || null,
       prioridade,
       cliente_id: user.id,
       status: 'aberto',
@@ -139,18 +139,18 @@ export function NovoTicketModal({ open, onClose, onSuccess }: NovoTicketModalPro
     <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Descartar alterações?</AlertDialogTitle>
+          <AlertDialogTitle>Discard changes?</AlertDialogTitle>
           <AlertDialogDescription>
-            As informações digitadas serão perdidas.
+            The entered information will be lost.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Continuar editando</AlertDialogCancel>
+          <AlertDialogCancel>Keep editing</AlertDialogCancel>
           <AlertDialogAction
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             onClick={handleConfirmDiscard}
           >
-            Descartar
+            Discard
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -159,42 +159,42 @@ export function NovoTicketModal({ open, onClose, onSuccess }: NovoTicketModalPro
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-lg" onInteractOutside={(e) => e.preventDefault()}>
         <DialogHeader>
-          <DialogTitle>Novo Ticket</DialogTitle>
+          <DialogTitle>New Ticket</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-5 pt-2">
           <div className="space-y-1.5">
-            <Label htmlFor="modal-titulo">Título *</Label>
+            <Label htmlFor="modal-titulo">Title *</Label>
             <Input
               id="modal-titulo"
-              placeholder="Resumo do problema"
-              value={titulo}
-              onChange={(e) => setTitulo(e.target.value)}
+              placeholder="Brief description of the issue"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
               required
             />
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="modal-descricao">Descrição *</Label>
+            <Label htmlFor="modal-descricao">Description *</Label>
             <Textarea
               id="modal-descricao"
-              placeholder="Descreva o problema com detalhes..."
+              placeholder="Describe the issue in detail..."
               rows={5}
-              value={descricao}
-              onChange={(e) => setDescricao(e.target.value)}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
               required
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="modal-categoria">Categoria</Label>
-              <Select value={categoriaId} onValueChange={setCategoriaId}>
+              <Label htmlFor="modal-categoria">Category</Label>
+              <Select value={categoryId} onValueChange={setCategoryId}>
                 <SelectTrigger id="modal-categoria" className="w-full">
-                  <SelectValue placeholder="Selecione..." />
+                  <SelectValue placeholder="Select..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {categorias.map((cat) => (
+                  {categories.map((cat) => (
                     <SelectItem key={cat.id} value={cat.id}>
                       {cat.nome}
                     </SelectItem>
@@ -204,7 +204,7 @@ export function NovoTicketModal({ open, onClose, onSuccess }: NovoTicketModalPro
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="modal-prioridade">Prioridade</Label>
+              <Label htmlFor="modal-prioridade">Priority</Label>
               <Select
                 value={prioridade}
                 onValueChange={(v) => setPrioridade(v as PrioridadeTicket)}
@@ -227,10 +227,10 @@ export function NovoTicketModal({ open, onClose, onSuccess }: NovoTicketModalPro
 
           <div className="flex items-center justify-end gap-3 pt-2">
             <Button type="button" variant="outline" onClick={handleClose} disabled={loading}>
-              Cancelar
+              Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? 'Criando...' : 'Criar Ticket'}
+              {loading ? 'Creating...' : 'Create Ticket'}
             </Button>
           </div>
         </form>

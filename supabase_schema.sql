@@ -1,6 +1,6 @@
 -- ================================================================
--- PERFIS DE USUÁRIO
--- Criado automaticamente quando um usuário se registra
+-- USER PROFILES
+-- Automatically created when a user registers
 -- ================================================================
 
 CREATE TABLE public.profiles (
@@ -8,14 +8,14 @@ CREATE TABLE public.profiles (
   email TEXT NOT NULL,
   full_name TEXT,
   avatar_url TEXT,
-  role TEXT NOT NULL DEFAULT 'cliente' 
+  role TEXT NOT NULL DEFAULT 'cliente'
     CHECK (role IN ('admin', 'agente', 'cliente')),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Função auxiliar: lê o role do usuário atual sem acionar RLS (evita recursão infinita
--- nas policies que precisam consultar profiles para verificar permissões)
+-- Helper function: reads the current user's role without triggering RLS (avoids infinite
+-- recursion in policies that need to query profiles to check permissions)
 CREATE OR REPLACE FUNCTION public.get_current_user_role()
 RETURNS TEXT
 LANGUAGE sql
@@ -26,7 +26,7 @@ AS $$
   SELECT role FROM public.profiles WHERE id = auth.uid()
 $$;
 
--- RLS: cada usuário vê seu perfil; admins veem todos
+-- RLS: each user sees their own profile; admins see all
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Usuários veem próprio perfil"
@@ -43,7 +43,7 @@ CREATE POLICY "Usuários atualizam próprio perfil"
   ON public.profiles FOR UPDATE
   USING (auth.uid() = id);
 
--- Trigger: cria perfil automaticamente ao registrar
+-- Trigger: automatically creates a profile on user registration
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -63,18 +63,18 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- ================================================================
--- CATEGORIAS DE TICKET
+-- TICKET CATEGORIES
 -- ================================================================
 
 CREATE TABLE public.categorias (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   nome TEXT NOT NULL UNIQUE,
-  cor TEXT DEFAULT '#6366f1',  -- cor para badge (hex)
+  cor TEXT DEFAULT '#6366f1',  -- badge color (hex)
   descricao TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Categorias: qualquer autenticado lê; somente admin cria/edita
+-- Categories: any authenticated user can read; only admins can create/edit
 ALTER TABLE public.categorias ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Autenticados leem categorias"
@@ -87,20 +87,20 @@ CREATE POLICY "Admins gerenciam categorias"
     EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
   );
 
--- Categorias iniciais
+-- Initial categories
 INSERT INTO public.categorias (nome, cor, descricao) VALUES
-  ('Suporte Técnico', '#ef4444', 'Problemas técnicos com o sistema'),
-  ('Financeiro', '#f59e0b', 'Dúvidas sobre cobranças e pagamentos'),
-  ('Comercial', '#10b981', 'Novos produtos e serviços'),
-  ('Outros', '#6366f1', 'Assuntos não categorizados');
+  ('Technical Support', '#ef4444', 'Technical issues with the system'),
+  ('Financial', '#f59e0b', 'Questions about billing and payments'),
+  ('Commercial', '#10b981', 'New products and services'),
+  ('Other', '#6366f1', 'Uncategorized topics');
 
 -- ================================================================
--- TICKETS (OS CHAMADOS)
+-- TICKETS (SUPPORT CASES)
 -- ================================================================
 
 CREATE TABLE public.tickets (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  numero SERIAL UNIQUE,             -- número legível: #1, #2, #3...
+  numero SERIAL UNIQUE,             -- human-readable number: #1, #2, #3...
   titulo TEXT NOT NULL,
   descricao TEXT NOT NULL,
   status TEXT NOT NULL DEFAULT 'aberto'
@@ -108,17 +108,17 @@ CREATE TABLE public.tickets (
   prioridade TEXT NOT NULL DEFAULT 'media'
     CHECK (prioridade IN ('baixa', 'media', 'alta', 'urgente')),
   categoria_id UUID REFERENCES public.categorias(id),
-  cliente_id UUID NOT NULL REFERENCES public.profiles(id),  -- quem abriu
-  agente_id UUID REFERENCES public.profiles(id),            -- quem está atendendo
+  cliente_id UUID NOT NULL REFERENCES public.profiles(id),  -- who opened the ticket
+  agente_id UUID REFERENCES public.profiles(id),            -- who is handling it
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
   resolved_at TIMESTAMPTZ
 );
 
--- RLS nos tickets (REGRA MAIS IMPORTANTE DO SISTEMA)
+-- RLS on tickets (MOST IMPORTANT RULE IN THE SYSTEM)
 ALTER TABLE public.tickets ENABLE ROW LEVEL SECURITY;
 
--- Clientes veem SOMENTE seus tickets
+-- Customers see ONLY their own tickets
 CREATE POLICY "Clientes veem somente seus tickets"
   ON public.tickets FOR SELECT
   USING (
@@ -129,12 +129,12 @@ CREATE POLICY "Clientes veem somente seus tickets"
     )
   );
 
--- Clientes criam tickets (eles mesmos são o cliente_id)
+-- Customers create tickets (they themselves are the cliente_id)
 CREATE POLICY "Clientes criam tickets"
   ON public.tickets FOR INSERT
   WITH CHECK (auth.uid() = cliente_id);
 
--- Admins e agentes atualizam tickets
+-- Admins and agents update tickets
 CREATE POLICY "Admins e agentes atualizam tickets"
   ON public.tickets FOR UPDATE
   USING (
@@ -145,7 +145,7 @@ CREATE POLICY "Admins e agentes atualizam tickets"
   );
 
 -- ================================================================
--- MENSAGENS (CONVERSA DENTRO DE CADA TICKET)
+-- MESSAGES (CONVERSATION WITHIN EACH TICKET)
 -- ================================================================
 
 CREATE TABLE public.mensagens (
@@ -153,13 +153,13 @@ CREATE TABLE public.mensagens (
   ticket_id UUID NOT NULL REFERENCES public.tickets(id) ON DELETE CASCADE,
   autor_id UUID NOT NULL REFERENCES public.profiles(id),
   conteudo TEXT NOT NULL,
-  interno BOOLEAN DEFAULT false,  -- true = nota interna (somente agentes)
+  interno BOOLEAN DEFAULT false,  -- true = internal note (agents only)
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 ALTER TABLE public.mensagens ENABLE ROW LEVEL SECURITY;
 
--- Participantes do ticket veem as mensagens (exceto notas internas para clientes)
+-- Ticket participants can see messages (customers cannot see internal notes)
 CREATE POLICY "Veem mensagens do ticket"
   ON public.mensagens FOR SELECT
   USING (
@@ -173,7 +173,7 @@ CREATE POLICY "Veem mensagens do ticket"
         )
       )
     ) AND (
-      -- Clientes não veem notas internas
+      -- Customers cannot see internal notes
       interno = false OR
       EXISTS (
         SELECT 1 FROM public.profiles
@@ -182,7 +182,7 @@ CREATE POLICY "Veem mensagens do ticket"
     )
   );
 
--- Quem pode escrever mensagens no ticket
+-- Who can write messages on a ticket
 CREATE POLICY "Participantes escrevem mensagens"
   ON public.mensagens FOR INSERT
   WITH CHECK (
@@ -200,7 +200,7 @@ CREATE POLICY "Participantes escrevem mensagens"
   );
 
 -- ================================================================
--- FUNÇÃO PARA ATUALIZAR updated_at AUTOMATICAMENTE
+-- FUNCTION TO AUTOMATICALLY UPDATE updated_at
 -- ================================================================
 
 CREATE OR REPLACE FUNCTION public.handle_updated_at()

@@ -21,7 +21,7 @@ export default function RegistroPage() {
     setError('')
 
     if (password !== confirmPassword) {
-      setError('As senhas não coincidem.')
+      setError('Passwords do not match.')
       return
     }
 
@@ -52,34 +52,34 @@ export default function RegistroPage() {
     <div className="flex min-h-screen items-center justify-center bg-zinc-50">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle className="text-2xl">Criar conta</CardTitle>
+          <CardTitle className="text-2xl">Create account</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="fullName">Nome completo</Label>
+              <Label htmlFor="fullName">Full name</Label>
               <Input
                 id="fullName"
                 type="text"
-                placeholder="João Silva"
+                placeholder="John Doe"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="seu@email.com"
+                placeholder="your@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
+              <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
                 type="password"
@@ -90,7 +90,7 @@ export default function RegistroPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirmar senha</Label>
+              <Label htmlFor="confirmPassword">Confirm password</Label>
               <Input
                 id="confirmPassword"
                 type="password"
@@ -104,13 +104,13 @@ export default function RegistroPage() {
               <p className="text-sm text-red-500">{error}</p>
             )}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Criando conta...' : 'Cadastrar'}
+              {loading ? 'Creating account...' : 'Sign Up'}
             </Button>
           </form>
           <p className="mt-4 text-center text-sm text-zinc-600">
-            Já tem conta?{' '}
+            Already have an account?{' '}
             <Link href="/login" className="font-medium text-zinc-900 underline underline-offset-4">
-              Entre
+              Sign In
             </Link>
           </p>
         </CardContent>

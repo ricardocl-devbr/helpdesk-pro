@@ -49,15 +49,15 @@ export function TicketsClient({ tickets, profile }: TicketsClientProps) {
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-semibold text-foreground">Lista de Tickets</h2>
-        <Button onClick={() => setModalOpen(true)}>Novo Ticket</Button>
+        <h2 className="text-lg font-semibold text-foreground">Ticket List</h2>
+        <Button onClick={() => setModalOpen(true)}>New Ticket</Button>
       </div>
 
       {tickets.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
-          <p className="text-muted-foreground text-sm">Nenhum ticket encontrado.</p>
+          <p className="text-muted-foreground text-sm">No tickets found.</p>
           <Button variant="outline" onClick={() => setModalOpen(true)}>
-            Criar primeiro ticket
+            Create first ticket
           </Button>
         </div>
       ) : (
@@ -66,11 +66,11 @@ export function TicketsClient({ tickets, profile }: TicketsClientProps) {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-16">#</TableHead>
-                <TableHead>Título</TableHead>
+                <TableHead>Title</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Prioridade</TableHead>
-                <TableHead>Categoria</TableHead>
-                <TableHead>Data</TableHead>
+                <TableHead>Priority</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Date</TableHead>
                 <TableHead className="w-20" />
               </TableRow>
             </TableHeader>
@@ -97,12 +97,12 @@ export function TicketsClient({ tickets, profile }: TicketsClientProps) {
                     {ticket.categoria?.nome ?? '—'}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {new Date(ticket.created_at).toLocaleDateString('pt-BR')}
+                    {new Date(ticket.created_at).toLocaleDateString('en-US')}
                   </TableCell>
                   <TableCell>
                     <Link href={`/tickets/${ticket.numero}`}>
                       <Button variant="outline" size="sm">
-                        Ver
+                        View
                       </Button>
                     </Link>
                   </TableCell>

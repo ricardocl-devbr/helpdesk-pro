@@ -11,7 +11,7 @@ export type StatusTicket =
 
 export type PrioridadeTicket = 'baixa' | 'media' | 'alta' | 'urgente'
 
-// ─── Entidades Base ───────────────────────────────────────────────────────────
+// ─── Base Entities ────────────────────────────────────────────────────────────
 
 export interface Profile {
   id: string
@@ -55,7 +55,7 @@ export interface Mensagem {
   created_at: string
 }
 
-// ─── Tipos Compostos (com joins) ──────────────────────────────────────────────
+// ─── Composite Types (with joins) ─────────────────────────────────────────────
 
 export interface TicketComDetalhes extends Ticket {
   categoria: Categoria
@@ -71,8 +71,8 @@ export interface MensagemComAutor extends Mensagem {
 
 export interface DashboardStats {
   total: number
-  abertos: number
-  em_andamento: number
-  resolvidos: number
-  tempo_medio_resposta: number
+  open: number
+  inProgress: number
+  resolved: number
+  avgResponseTime: number
 }

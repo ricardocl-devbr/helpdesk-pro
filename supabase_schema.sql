@@ -33,6 +33,8 @@ CREATE POLICY "Usuários veem próprio perfil"
   ON public.profiles FOR SELECT
   USING (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Admins e agentes veem todos os perfis" ON public.profiles;
+
 CREATE POLICY "Admins e agentes veem todos os perfis"
   ON public.profiles FOR SELECT
   USING (public.get_current_user_role() IN ('admin', 'agente'));

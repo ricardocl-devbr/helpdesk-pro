@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { HeadphonesIcon, LayoutDashboard, Ticket, Users, Tag, LogOut } from 'lucide-react'
+import { HeadphonesIcon, LayoutDashboard, Ticket, Users, Tag, LogOut, UserCircle } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { createBrowserClient } from '@/lib/supabase/client'
@@ -71,7 +71,10 @@ export function Sidebar({ profile }: SidebarProps) {
       </nav>
 
       <div className="border-t border-gray-200 px-3 py-4">
-        <div className="flex items-center gap-3 mb-3">
+        <Link
+          href="/perfil"
+          className="flex items-center gap-3 mb-3 rounded-md px-1 py-1 hover:bg-gray-100 transition-colors"
+        >
           <Avatar className="h-8 w-8 shrink-0">
             <AvatarImage src={profile.avatar_url ?? undefined} alt={profile.full_name} />
             <AvatarFallback className="text-xs">{initials}</AvatarFallback>
@@ -80,7 +83,8 @@ export function Sidebar({ profile }: SidebarProps) {
             <p className="text-sm font-medium text-gray-900 truncate">{profile.full_name}</p>
             <p className="text-xs text-gray-500 truncate">{profile.email}</p>
           </div>
-        </div>
+          <UserCircle className="h-4 w-4 text-gray-400 shrink-0" />
+        </Link>
         <Button
           variant="ghost"
           size="sm"

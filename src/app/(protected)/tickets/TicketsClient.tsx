@@ -100,7 +100,7 @@ export function TicketsClient({ tickets, profile }: TicketsClientProps) {
                     {new Date(ticket.created_at).toLocaleDateString('pt-BR')}
                   </TableCell>
                   <TableCell>
-                    <Link href={`/tickets/${ticket.id}`}>
+                    <Link href={`/tickets/${ticket.numero}`}>
                       <Button variant="outline" size="sm">
                         Ver
                       </Button>

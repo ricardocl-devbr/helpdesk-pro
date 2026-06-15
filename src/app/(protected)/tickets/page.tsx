@@ -39,7 +39,7 @@ export default async function TicketsPage({
   let query = supabase
     .from('tickets')
     .select(
-      '*, categoria:categories(id, name, color), cliente:profiles!tickets_customer_id_fkey(id, full_name, email)'
+      '*, categoria:categories(id, name, color), cliente:profiles!customer_id(id, full_name, email)'
     )
     .order('created_at', { ascending: false })
 
@@ -52,10 +52,12 @@ export default async function TicketsPage({
   if (categoria_id) query = query.eq('category_id', categoria_id)
   if (busca) query = query.ilike('title', `%${busca}%`)
 
-  const [{ data: tickets }, { data: categories }] = await Promise.all([
+  const [{ data: tickets, error: ticketsError }, { data: categories }] = await Promise.all([
     query,
     supabase.from('categories').select('id, name, color, ativa').order('name'),
   ])
+
+  if (ticketsError) console.error('Tickets query error:', ticketsError)
 
   const filters: TicketFilters = {
     status: status ?? '',

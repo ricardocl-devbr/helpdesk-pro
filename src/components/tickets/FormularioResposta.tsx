@@ -46,7 +46,8 @@ export function FormularioResposta({ ticketId }: FormularioRespostaProps) {
       return
     }
 
-    window.location.reload()
+    setContent('')
+    setSending(false)
   }
 
   return (

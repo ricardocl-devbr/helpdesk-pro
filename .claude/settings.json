@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-ChildItem C:\\\\dev\\\\piloto\\\\src -Recurse | Where-Object { !$_.PSIsContainer } | Select-Object -ExpandProperty FullName)"
+    ]
+  }
+}

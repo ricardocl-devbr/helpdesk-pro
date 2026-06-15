@@ -1,12 +1,14 @@
 import { redirect } from 'next/navigation'
 import { createServerClient } from '@/lib/supabase/server'
 import { Header } from '@/components/layout/Header'
+import { ConversationPanel } from '@/components/tickets/ConversationPanel'
 import { FormularioResposta } from '@/components/tickets/FormularioResposta'
 import { TicketActions } from '@/components/tickets/TicketActions'
 import { TicketHistory } from '@/components/tickets/TicketHistory'
+import { TicketRealtimeSync } from '@/components/tickets/TicketRealtimeSync'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
 import {
   STATUS_LABELS,
@@ -60,7 +62,7 @@ export default async function TicketDetailPage({
   const { data: ticket } = await supabase
     .from('tickets')
     .select(
-      '*, categoria:categories(id, name, color), cliente:profiles!tickets_customer_id_fkey(id, full_name, email), agente:profiles!tickets_agent_id_fkey(id, full_name, email)'
+      '*, categoria:categories(id, name, color), cliente:profiles!customer_id(id, full_name, email), agente:profiles!agent_id(id, full_name, email)'
     )
     .eq('numero', Number(numero))
     .single()
@@ -92,6 +94,7 @@ export default async function TicketDetailPage({
 
   return (
     <div>
+      <TicketRealtimeSync ticketId={t.id} />
       <Header
         title={`Ticket #${t.numero} — ${t.title}`}
         profile={profile as Profile}
@@ -104,82 +107,15 @@ export default async function TicketDetailPage({
             <CardHeader className="pb-3">
               <CardTitle className="text-base font-medium">Conversation</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Initial ticket description */}
-              <div className="flex gap-3">
-                <Avatar className="h-8 w-8 shrink-0 mt-0.5">
-                  <AvatarFallback className="text-xs bg-blue-100 text-blue-800">
-                    {initials(t.cliente.full_name)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-baseline gap-2 mb-1">
-                    <span className="text-sm font-medium text-gray-900">
-                      {t.cliente.full_name}
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      {formatDate(t.created_at)}
-                    </span>
-                  </div>
-                  <div className="bg-gray-50 rounded-lg px-3 py-2 text-sm text-gray-700 whitespace-pre-wrap">
-                    {t.description}
-                  </div>
-                </div>
-              </div>
-
-              {msgs.length > 0 && <Separator />}
-
-              {/* Messages */}
-              {msgs.map((msg) => {
-                const isCustomer = msg.autor.role === 'customer'
-                return (
-                  <div
-                    key={msg.id}
-                    className={`flex gap-3 ${isCustomer ? '' : 'flex-row-reverse'}`}
-                  >
-                    <Avatar className="h-8 w-8 shrink-0 mt-0.5">
-                      <AvatarImage
-                        src={msg.autor.avatar_url ?? undefined}
-                        alt={msg.autor.full_name}
-                      />
-                      <AvatarFallback
-                        className={`text-xs ${
-                          isCustomer
-                            ? 'bg-blue-100 text-blue-800'
-                            : 'bg-indigo-100 text-indigo-800'
-                        }`}
-                      >
-                        {initials(msg.autor.full_name)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div
-                      className={`flex-1 min-w-0 ${isCustomer ? '' : 'flex flex-col items-end'}`}
-                    >
-                      <div
-                        className={`flex items-baseline gap-2 mb-1 ${
-                          isCustomer ? '' : 'flex-row-reverse'
-                        }`}
-                      >
-                        <span className="text-sm font-medium text-gray-900">
-                          {msg.autor.full_name}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          {formatDate(msg.created_at)}
-                        </span>
-                      </div>
-                      <div
-                        className={`rounded-lg px-3 py-2 text-sm whitespace-pre-wrap max-w-prose ${
-                          isCustomer
-                            ? 'bg-gray-50 text-gray-700'
-                            : 'bg-indigo-50 text-indigo-900'
-                        }`}
-                      >
-                        {msg.content}
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
+            <CardContent>
+              <ConversationPanel
+                initialMessages={msgs}
+                ticketId={t.id}
+                currentUser={profile as Profile}
+                ticketDescription={t.description}
+                ticketCustomer={t.cliente}
+                ticketCreatedAt={t.created_at}
+              />
             </CardContent>
           </Card>
 

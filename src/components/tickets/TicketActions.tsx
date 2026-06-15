@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { appToast } from '@/lib/toast'
 import { createBrowserClient } from '@/lib/supabase/client'
@@ -29,6 +29,15 @@ export function TicketActions({
 }: TicketActionsProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [statusValue, setStatusValue] = useState(ticket.status)
+  const [priorityValue, setPriorityValue] = useState(ticket.priority)
+  const [agentValue, setAgentValue] = useState(ticket.agent_id ?? '__unassigned__')
+
+  useEffect(() => {
+    setStatusValue(ticket.status)
+    setPriorityValue(ticket.priority)
+    setAgentValue(ticket.agent_id ?? '__unassigned__')
+  }, [ticket.status, ticket.priority, ticket.agent_id])
 
   if (currentUserRole !== 'admin' && currentUserRole !== 'agent') return null
 
@@ -80,10 +89,11 @@ export function TicketActions({
         <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Status</span>
         <Select
           disabled={loading}
-          defaultValue={ticket.status}
-          onValueChange={(v) =>
+          value={statusValue}
+          onValueChange={(v) => {
+            setStatusValue(v)
             handleChange('status', 'status_changed', ticket.status, v)
-          }
+          }}
         >
           <SelectTrigger className="w-full h-8 text-sm">
             <SelectValue />
@@ -102,10 +112,11 @@ export function TicketActions({
         <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Priority</span>
         <Select
           disabled={loading}
-          defaultValue={ticket.priority}
-          onValueChange={(v) =>
+          value={priorityValue}
+          onValueChange={(v) => {
+            setPriorityValue(v)
             handleChange('priority', 'prioridade_changed', ticket.priority, v)
-          }
+          }}
         >
           <SelectTrigger className="w-full h-8 text-sm">
             <SelectValue />
@@ -126,10 +137,11 @@ export function TicketActions({
         </span>
         <Select
           disabled={loading}
-          defaultValue={ticket.agent_id ?? '__unassigned__'}
-          onValueChange={(v) =>
+          value={agentValue}
+          onValueChange={(v) => {
+            setAgentValue(v)
             handleChange('agent_id', 'agente_assigned', ticket.agent_id, v === '__unassigned__' ? null : v)
-          }
+          }}
         >
           <SelectTrigger className="w-full h-8 text-sm">
             <SelectValue />
